@@ -6,8 +6,7 @@ persist a system-UID app, then use Dirty Frag from it for all subsequent roots.
 
 ## Supported devices
 
-Currently it only supports Galaxy S26 OneUI 8.5 (samsung/m1qjpnx/m1q:16/BP4A.251205.006/S942QOPU1AZDE_SJP1AZDE:user/release-keys).
-Because the embedded `ksud` is built for Galaxy S26.
+Currently it only supports Galaxy S26 OneUI 8.5 (samsung/m1qjpnx/m1q:16/BP4A.251205.006/S942QOPU1AZDE_SJP1AZDE:user/release-keys), because the embedded `ksud` is built for Galaxy S26.
 
 ## Background
 
@@ -32,8 +31,8 @@ temp root (ghostlock) -> DFInstaller injects key -> soft reboot
 
 ## Prerequisites
 
-1. Another vulnerability to get temporary root access
-2. Kernel vulnerable to Dirty Frag
+1. A vulnerability to get temporary root access
+2. A kernel vulnerable to Dirty Frag
 
 ## Usage
 
@@ -60,7 +59,7 @@ $ ANDROID_NDK_HOME=(ndk path) ANDROID_HOME=(sdk path) ./build.sh
 ```
 
 The LKM rebuild needs Docker (GKI DDK), see `dirtyfrag-lkm/build.sh`.
-Build ksud from kdp-612-3.3.0 branch of (my fork)[https://github.com/polygraphene/KernelSU/tree/kdp-612-3.3.0] of KernelSU.
+Build ksud from kdp-612-3.3.0 branch of [my fork](https://github.com/polygraphene/KernelSU/tree/kdp-612-3.3.0) of KernelSU.
 
 ## Layout
 
