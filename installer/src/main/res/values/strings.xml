@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DFInstaller</string>
+    <string name="status_idle">Idle. Obtain temporary root first (e.g. ghostlock) and grant root access on the root manager.</string>
+    <string name="steps">Steps: Recheck → Inject → Soft reboot → Install DFReroot (Uninstall removes the key)</string>
+    <string name="check_root">Recheck root / key status</string>
+    <string name="dump">Dump (read-only, harmless)</string>
+    <string name="dry_run">Dry-run (verify without writing)</string>
+    <string name="inject">Inject (insert key into packages.xml)</string>
+    <string name="reboot">Soft reboot (restart framework)</string>
+    <string name="install_dfreroot">Install DFReroot (after soft reboot)</string>
+    <string name="uninstall_key">Uninstall key (remove from packages.xml)</string>
+    <string name="root_unknown">root: checking…</string>
+    <string name="root_ok">root: OK (su works)</string>
+    <string name="root_missing">root: MISSING — obtain temporary root first (e.g. ghostlock) and grant root access on the root manager</string>
+    <string name="key_unknown">key: unknown</string>
+    <string name="key_injected">key: INJECTED in android.uid.system</string>
+    <string name="key_clean">key: not injected</string>
+    <string name="hint_need_root">Obtain temporary root first (e.g. ghostlock), then press Recheck.</string>
+</resources>

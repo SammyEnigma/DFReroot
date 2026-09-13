@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DFReroot</string>
+    <string name="run_all">Run DirtyFrag</string>
+    <string name="status_idle">Idle.</string>
+</resources>
