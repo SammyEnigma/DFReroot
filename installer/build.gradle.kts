@@ -12,7 +12,7 @@ android {
         minSdk = 32
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
     }
     signingConfigs {
         // Must use the same signing key as DFReroot: the key inserted into
