@@ -154,12 +154,6 @@ class MainActivity : Activity() {
         }
     }
 
-    /**
-     * Installs DFReroot as system sharedUserId (call after soft reboot).
-     * Uses only `pm install` via su: the PackageInstaller session API ends
-     * up in "User action required" and its confirmation activity is
-     * background-launch-blocked, so the session never completes.
-     */
     private fun installDfreroot(): String {
         val s = StringBuilder()
         val apk: File = try {
@@ -168,9 +162,10 @@ class MainActivity : Activity() {
             s.appendLine("[x] ${e.message}")
             return s.toString()
         }
-        s.appendLine("[*] installing ${apk.absolutePath} (${apk.length()} bytes)")
-        s.appendLine("$ su -c pm install -r '${apk.absolutePath}'")
-        s.append(execSu("pm install -r '${apk.absolutePath}'"))
+        val targetUser = Process.myUid() / 100000
+        s.appendLine("[*] installing ${apk.absolutePath} (${apk.length()} bytes) for user $targetUser")
+        s.appendLine("$ su -c pm install -r --user $targetUser '${apk.absolutePath}'")
+        s.append(execSu("pm install -r --user $targetUser '${apk.absolutePath}'"))
         return s.toString()
     }
 
