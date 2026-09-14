@@ -40,7 +40,7 @@ public class DirtyFrag {
         reporterBinder = b;
     }
 
-    public native void runAll();
+    public native int runAll();
 
     public void report(String msg) {
         var p = Parcel.obtain();

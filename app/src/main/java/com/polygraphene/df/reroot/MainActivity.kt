@@ -1,10 +1,12 @@
 package com.polygraphene.df.reroot
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
@@ -14,6 +16,7 @@ import android.os.SystemClock
 import java.util.concurrent.atomic.AtomicBoolean
 import android.util.Log
 import android.widget.Button
+import android.widget.ScrollView
 import android.widget.TextView
 
 class MainActivity : Activity() {
@@ -24,6 +27,10 @@ class MainActivity : Activity() {
     private val controllerLock = Object()
     private val running = AtomicBoolean(false)
     private var evilReceiver: BroadcastReceiver? = null
+
+    private var runDialogLog: TextView? = null
+    private var runDialogScroll: ScrollView? = null
+    private var runDialogStatus: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +49,6 @@ class MainActivity : Activity() {
                 } catch (t: Throwable) {
                     append("[x] resolve binder: $t\n")
                 } finally {
-                    // Wake the background waiter in runDfAll (if any).
                     synchronized(controllerLock) { controllerLock.notifyAll() }
                 }
             }
@@ -59,7 +65,6 @@ class MainActivity : Activity() {
     }
 
     private fun runDfAll() {
-        // Check if already hooked
         if (java.io.File("/dev/df").exists()) {
             append("[x] already hooked (/dev/df present). Refusing second run.\n" +
                 "    Only hard reboot clears armed hooks.\n")
@@ -69,7 +74,28 @@ class MainActivity : Activity() {
             append("already running\n")
             return
         }
+        showRunDialog()
+    }
+
+    private fun showRunDialog() {
+        val view = layoutInflater.inflate(R.layout.dialog_run, null)
+        runDialogStatus = view.findViewById(R.id.dialogStatus)
+        runDialogLog = view.findViewById(R.id.dialogLog)
+        runDialogScroll = view.findViewById(R.id.dialogScroll)
+        setRunResult(active = true, success = false)
+        val dlg = AlertDialog.Builder(this)
+            .setTitle(R.string.run_dialog_title)
+            .setView(view)
+            .setPositiveButton(R.string.run_dialog_close, null)
+            .create()
+        dlg.setOnDismissListener {
+            runDialogLog = null
+            runDialogScroll = null
+            runDialogStatus = null
+        }
+        dlg.show()
         runBg {
+            var runResult = -1
             try {
                 append(StageHop.hopToNetworkStack(this))
                 val c = awaitController(timeoutMs = 30_000) ?: run {
@@ -93,8 +119,10 @@ class MainActivity : Activity() {
                 }
                 p.writeStrongBinder(reporter)
                 try {
-                    if (c.transact(5, p, r, 0)) append("\nrunAll done res=${r.readInt()}\n")
-                    else append("runAll failed: transact returned false\n")
+                    if (c.transact(5, p, r, 0)) {
+                        runResult = r.readInt()
+                        append("\nrunAll done res=$runResult\n")
+                    } else append("runAll failed: transact returned false\n")
                 } catch (t: Throwable) {
                     append("runAll failed: ${t.message}\n")
                 } finally {
@@ -103,6 +131,26 @@ class MainActivity : Activity() {
                 }
             } finally {
                 running.set(false)
+                val success = runResult == 0
+                runOnUiThread { setRunResult(active = false, success = success) }
+            }
+        }
+    }
+
+    private fun setRunResult(active: Boolean, success: Boolean) {
+        val st = runDialogStatus ?: return
+        when {
+            active -> {
+                st.text = getString(R.string.run_running)
+                st.setTextColor(Color.DKGRAY)
+            }
+            success -> {
+                st.text = getString(R.string.run_success)
+                st.setTextColor(Color.parseColor("#1B8A2E"))
+            }
+            else -> {
+                st.text = getString(R.string.run_failed)
+                st.setTextColor(Color.parseColor("#C62828"))
             }
         }
     }
@@ -169,7 +217,12 @@ class MainActivity : Activity() {
     }
 
     private fun append(s: String) {
-        runOnUiThread { log.append(s + if (s.endsWith("\n")) "" else "\n") }
+        val line = s + if (s.endsWith("\n")) "" else "\n"
+        runOnUiThread {
+            log.append(line)
+            runDialogLog?.append(line)
+            runDialogScroll?.post { runDialogScroll?.fullScroll(ScrollView.FOCUS_DOWN) }
+        }
     }
 
     companion object {

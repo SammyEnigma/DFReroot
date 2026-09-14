@@ -3,4 +3,9 @@
     <string name="app_name">DFReroot</string>
     <string name="run_all">Run DirtyFrag</string>
     <string name="status_idle">Idle.</string>
+    <string name="run_dialog_title">DirtyFrag Log</string>
+    <string name="run_dialog_close">Close</string>
+    <string name="run_running">⏳ Running…</string>
+    <string name="run_success">✅ Succeeded</string>
+    <string name="run_failed">❌ Failed</string>
 </resources>

@@ -1,30 +1,15 @@
 package com.polygraphene.df.installer
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Process
-import android.view.View
 import android.widget.Button
+import android.widget.ScrollView
 import android.widget.TextView
 import java.io.File
 
-/**
- * DFInstaller GUI.
- *
- * Prerequisite: temporary root (e.g. ghostlock) with working `su`.
- * Flow (mostly automatic):
- *  - On launch: root check, then key-injection status check.
- *  - [Inject] inserts the DFReroot signing key into android.uid.system
- *    pastSigs (disabled while already injected; the backend also refuses).
- *  - [Soft reboot] restarts system_server so PMS re-reads packages.xml;
- *    no kernel reboot needed.
- *  - [Install DFReroot] (passes as system sharedUserId after the reboot).
- *  - [Uninstall key] removes our key again (enabled only while injected).
- *  - From then on, use DFReroot's dirtyfrag for root.
- *
- * The DFReroot APK comes only from this APK's bundled asset (df_reroot.apk).
- * Build with `./build.sh` to bundle it.
- */
 class MainActivity : Activity() {
 
     private lateinit var status: TextView
@@ -39,6 +24,10 @@ class MainActivity : Activity() {
 
     @Volatile private var rooted = false
     @Volatile private var injected = false
+
+    private var dialogLog: TextView? = null
+    private var dialogScroll: ScrollView? = null
+    private var dialogStatus: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,46 +44,20 @@ class MainActivity : Activity() {
         status.text = myIdentity()
 
         btnRoot.setOnClickListener { runBg { refreshAll() } }
-        // Hidden (kept wired for debugging): Dump / Dry-run.
         findViewById<Button>(R.id.btnDump).setOnClickListener {
             runBg { append(runAppProcess("--dump")) }
         }
         findViewById<Button>(R.id.btnDryRun).setOnClickListener {
             runBg { append(runAppProcess("--dry-run")) }
         }
-        btnInject.setOnClickListener {
-            runBg {
-                append(runAppProcess(""))
-                refreshAll()
-            }
-        }
-        btnUninstall.setOnClickListener {
-            runBg {
-                append(runAppProcess("--uninstall"))
-                refreshAll()
-            }
-        }
-        btnReboot.setOnClickListener {
-            runBg {
-                // Soft reboot: killing system_server makes zygote restart
-                // the whole framework (incl. PMS re-reading packages.xml)
-                // without rebooting the kernel.
-                append("$ su -c 'kill $(pidof system_server)'")
-                append(execSu("kill $(pidof system_server)"))
-            }
-        }
-        btnInstall.setOnClickListener {
-            runBg { append(installDfreroot()) }
-        }
+        btnInject.setOnClickListener { showInjectDialog() }
+        btnUninstall.setOnClickListener { showUninstallDialog() }
+        btnReboot.setOnClickListener { showRebootConfirm() }
+        btnInstall.setOnClickListener { showInstallDialog() }
 
-        // Automatic on launch: root check, then injection status check.
         runBg { refreshAll() }
     }
 
-    /**
-     * Root check + injection-status check + button state update.
-     * Runs off the UI thread; touches views only via runOnUiThread.
-     */
     private fun refreshAll() {
         val rootOut = execSu("id")
         rooted = rootOut.contains("uid=0")
@@ -124,7 +87,6 @@ class MainActivity : Activity() {
         val checkOut = execSu(buildAppProcessCmd(keyHex, "--check"))
         append("$ su -c ...InjectMain --check")
         append(checkOut)
-        // Per-target lines look like "[check] android.uid.system injected=true".
         injected = checkOut.lines().any { l ->
             l.contains("android.uid.system") && l.contains("injected=true")
         }
@@ -143,12 +105,6 @@ class MainActivity : Activity() {
         btnInstall.isEnabled = rooted
     }
 
-    /**
-     * Runs InjectMain (app_process) via su.
-     * CLASSPATH is this APK (contains the InjectMain class); the DFReroot
-     * signing key is read here via PackageManager (v1/v2/v3 agnostic) and
-     * passed as --keyhex, so InjectMain never parses APK signatures itself.
-     */
     private fun runAppProcess(mode: String): String {
         val keyHex: String = try {
             resolveKeyHex()
@@ -171,7 +127,6 @@ class MainActivity : Activity() {
         }
     }
 
-    /** DFReroot signing key hex from the bundled asset (no root needed). */
     private fun resolveKeyHex(): String {
         val certApk = try {
             resolveCertApk()
@@ -185,11 +140,6 @@ class MainActivity : Activity() {
         }
     }
 
-    /**
-     * Extracts the DFReroot APK from the bundled asset. The only source.
-     * Throws when the asset is not bundled
-     * (bundle build with `./build.sh` is required).
-     */
     private fun resolveCertApk(): String {
         try {
             assets.open("df_reroot.apk").use { input ->
@@ -224,7 +174,6 @@ class MainActivity : Activity() {
         return s.toString()
     }
 
-    /** Runs `su -c <script>`, returns stdout+stderr. Explains when su is missing. */
     private fun execSu(script: String): String {
         try {
             val p = Runtime.getRuntime().exec(arrayOf("su", "-c", script))
@@ -266,7 +215,98 @@ class MainActivity : Activity() {
         runOnUiThread(block)
     }
 
+    private fun showInjectDialog() {
+        showOperationDialog(R.string.inject_dialog_title, { runAppProcess("") }, ::isInjectSuccess, true)
+    }
+
+    private fun showUninstallDialog() {
+        showOperationDialog(R.string.uninstall_dialog_title, { runAppProcess("--uninstall") }, ::isUninstallSuccess, true)
+    }
+
+    private fun showInstallDialog() {
+        showOperationDialog(R.string.install_dialog_title, { installDfreroot() }, ::isInstallSuccess, false)
+    }
+
+    private fun showRebootConfirm() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.reboot_confirm_title)
+            .setMessage(R.string.reboot_confirm_message)
+            .setPositiveButton(R.string.reboot_confirm_ok) { _, _ ->
+                runBg {
+                    append("$ su -c 'kill $(pidof system_server)'")
+                    append(execSu("kill $(pidof system_server)"))
+                }
+            }
+            .setNegativeButton(R.string.reboot_confirm_cancel, null)
+            .show()
+    }
+
+    private fun showOperationDialog(titleRes: Int, task: () -> String, isSuccess: (String) -> Boolean, refresh: Boolean) {
+        val view = layoutInflater.inflate(R.layout.dialog_inject, null)
+        dialogStatus = view.findViewById(R.id.dialogStatus)
+        dialogLog = view.findViewById(R.id.dialogLog)
+        dialogScroll = view.findViewById(R.id.dialogScroll)
+        setDialogResult(running = true, success = false)
+        val dlg = AlertDialog.Builder(this)
+            .setTitle(titleRes)
+            .setView(view)
+            .setPositiveButton(R.string.inject_dialog_close, null)
+            .create()
+        dlg.setOnDismissListener {
+            dialogLog = null
+            dialogScroll = null
+            dialogStatus = null
+        }
+        dlg.show()
+        runBg {
+            val result = task()
+            append(result)
+            if (refresh) refreshAll()
+            val success = isSuccess(result)
+            ui { setDialogResult(running = false, success = success) }
+        }
+    }
+
+    private fun isInjectSuccess(result: String): Boolean {
+        return result.contains("[+] DONE") &&
+            !result.contains("[x] FAILED")
+    }
+
+    private fun isUninstallSuccess(result: String): Boolean {
+        return (result.contains("[+] DONE") || result.contains("nothing to write")) &&
+            !result.contains("[x] FAILED")
+    }
+
+    private fun isInstallSuccess(result: String): Boolean {
+        return result.contains("Success") &&
+            !result.contains("Failure") &&
+            result.contains("[rc=0]")
+    }
+
+    private fun setDialogResult(running: Boolean, success: Boolean) {
+        val st = dialogStatus ?: return
+        when {
+            running -> {
+                st.text = getString(R.string.inject_running)
+                st.setTextColor(Color.DKGRAY)
+            }
+            success -> {
+                st.text = getString(R.string.inject_success)
+                st.setTextColor(Color.parseColor("#1B8A2E"))
+            }
+            else -> {
+                st.text = getString(R.string.inject_failed)
+                st.setTextColor(Color.parseColor("#C62828"))
+            }
+        }
+    }
+
     private fun append(s: String) {
-        runOnUiThread { log.append(s + if (s.endsWith("\n")) "" else "\n") }
+        val line = s + if (s.endsWith("\n")) "" else "\n"
+        runOnUiThread {
+            log.append(line)
+            dialogLog?.append(line)
+            dialogScroll?.post { dialogScroll?.fullScroll(ScrollView.FOCUS_DOWN) }
+        }
     }
 }

@@ -773,35 +773,40 @@ static int has_mark(int num) {
     return access(buf, F_OK) == 0 || errno != ENOENT;
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jint JNICALL
 Java_org_lsposed_lspromise_DirtyFrag_runAll(JNIEnv *env, jobject thiz) {
     struct Reporter reporterobj = {
         .env = env,
         .obj = thiz
     }, *reporter = &reporterobj;
     if (patch_ko(reporter)) {
-        return;
+        return 3;
     }
     if (patch_libc(reporter)) {
-        return;
+        return 3;
     }
     if (patch_cxx(0, reporter)) {
-        return;
+        return 3;
     }
     for (int i = 0; i < 8; i++) {
         usleep(500000);
         REPORTLN("* trying to trigger (%d)..", i);
         createOrphanProcess();
-        usleep(500000); // orphan needs ~1s (grandchild sleep) + init reap latency
+        usleep(500000);
         int mark = has_mutex();
         int mark2 = has_mark(2);
         int mark3 = has_mark(3);
         int mark4 = has_mark(4);
         REPORTLN("mark: %d %d %d %d", mark, mark2, mark3, mark4);
-        if (mark3 || mark4) {
+        if (mark4) {
+            REPORTLN("Failed (failure marker set). See logcat for details.\n");
+            return 1;
+        }
+        if (mark3) {
             REPORTLN("Done. Check KSU Manager.\n");
-            return;
+            return 0;
         }
     }
     REPORTLN("no success signal; verify via manager app + logcat");
+    return 2;
 }

@@ -17,4 +17,15 @@
     <string name="key_injected">key: INJECTED in android.uid.system</string>
     <string name="key_clean">key: not injected</string>
     <string name="hint_need_root">Obtain temporary root first (e.g. ghostlock), then press Recheck.</string>
+    <string name="inject_dialog_title">Inject Log</string>
+    <string name="inject_dialog_close">Close</string>
+    <string name="inject_running">⏳ Running…</string>
+    <string name="inject_success">✅ Succeeded</string>
+    <string name="inject_failed">❌ Failed</string>
+    <string name="install_dialog_title">Install Log</string>
+    <string name="uninstall_dialog_title">Uninstall Log</string>
+    <string name="reboot_confirm_title">Soft Reboot</string>
+    <string name="reboot_confirm_message">Restart the framework (system_server) now? The screen will go black briefly.</string>
+    <string name="reboot_confirm_ok">Reboot</string>
+    <string name="reboot_confirm_cancel">Cancel</string>
 </resources>

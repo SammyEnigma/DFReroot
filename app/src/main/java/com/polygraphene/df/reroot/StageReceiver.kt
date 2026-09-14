@@ -68,8 +68,7 @@ class StageReceiver : BroadcastReceiver() {
                         5 -> {
                             Log.d(TAG, "run all")
                             val df = DirtyFrag(data.readStrongBinder())
-                            df.runAll()
-                            reply?.writeInt(1)
+                            reply?.writeInt(df.runAll())
                             return true
                         }
                     }
