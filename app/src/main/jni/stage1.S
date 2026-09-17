@@ -205,10 +205,6 @@ argv_prog:
     .asciz "logcat"
 argv_late:
     .asciz "late-load"
-argv_kmiflag:
-    .asciz "--kmi"
-argv_kmival:
-    .asciz "android16-6.12"
 argv_pkgname:
     .asciz "--package-name"
 argv_ksu:
@@ -309,7 +305,7 @@ matched:
 
     logdbg msg_s2_bind, logdw_path2, log_tag2
 
-    // argv = [logcat, late-load, --kmi, android16-6.12, --package-name,
+    // argv = [logcat, late-load, --package-name,
     //         me.weishu.kernelsu, --stage-from, ksud_path, NULL]
     adr x0, argv_prog
     str x0, [sp]
@@ -317,25 +313,19 @@ matched:
     adr x0, argv_late
     str x0, [sp, 8]
 
-    adr x0, argv_kmiflag
+    adr x0, argv_pkgname
     str x0, [sp, 16]
 
-    adr x0, argv_kmival
+    adr x0, argv_ksu
     str x0, [sp, 24]
 
-    adr x0, argv_pkgname
+    adr x0, argv_stage_from
     str x0, [sp, 32]
 
-    adr x0, argv_ksu
+    adr x0, ksud_path
     str x0, [sp, 40]
 
-    adr x0, argv_stage_from
-    str x0, [sp, 48]
-
-    adr x0, ksud_path
-    str x0, [sp, 56]
-
-    str xzr, [sp, 64]
+    str xzr, [sp, 48]
 
     adr x0, logcat_path
     mov x1, sp
