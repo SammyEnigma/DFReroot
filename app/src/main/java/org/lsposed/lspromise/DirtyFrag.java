@@ -15,8 +15,8 @@ import android.util.Log;
  * "org/lsposed/lspromise/DirtyFrag". Renaming either side breaks linkage.
  *
  * Native lib: app/src/main/jni/libexp (exp.c + stage1.S (arm64-only) +
- * elf_parser.c). dirtyfrag.ko is a PREBUILT placeholder (vermagic 6.6.127);
- * rebuild it against the target kernel (e.g. 6.12 S26 GKI) before real use.
+ * elf_parser.c + versioned dirtyfrag-android*.ko payloads, selected at
+ * runtime by kernel version).
  */
 public class DirtyFrag {
 

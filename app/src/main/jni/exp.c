@@ -21,6 +21,7 @@
 #include <linux/rtnetlink.h>
 #include <linux/xfrm.h>
 #include <poll.h>
+#include <sys/utsname.h>
 #include <jni.h>
 #include <sched.h>
 #include <sys/mman.h>
@@ -615,11 +616,46 @@ int patch_cxx(int run_index, struct Reporter *reporter) {
 
 asm(
     ".section .rodata\n"
-    ".global dirtyfrag_ko_start\n"
-    ".global dirtyfrag_ko_end\n"
-    "dirtyfrag_ko_start:\n"
-    ".incbin \"dirtyfrag.ko\"\n"
-    "dirtyfrag_ko_end:\n"
+    ".global dirtyfrag_ko_12_5_10_start\n"
+    ".global dirtyfrag_ko_12_5_10_end\n"
+    "dirtyfrag_ko_12_5_10_start:\n"
+    ".incbin \"dirtyfrag-android12-5.10.ko\"\n"
+    "dirtyfrag_ko_12_5_10_end:\n"
+    ".global dirtyfrag_ko_13_5_10_start\n"
+    ".global dirtyfrag_ko_13_5_10_end\n"
+    "dirtyfrag_ko_13_5_10_start:\n"
+    ".incbin \"dirtyfrag-android13-5.10.ko\"\n"
+    "dirtyfrag_ko_13_5_10_end:\n"
+    ".global dirtyfrag_ko_13_5_15_start\n"
+    ".global dirtyfrag_ko_13_5_15_end\n"
+    "dirtyfrag_ko_13_5_15_start:\n"
+    ".incbin \"dirtyfrag-android13-5.15.ko\"\n"
+    "dirtyfrag_ko_13_5_15_end:\n"
+    ".global dirtyfrag_ko_14_5_15_start\n"
+    ".global dirtyfrag_ko_14_5_15_end\n"
+    "dirtyfrag_ko_14_5_15_start:\n"
+    ".incbin \"dirtyfrag-android14-5.15.ko\"\n"
+    "dirtyfrag_ko_14_5_15_end:\n"
+    ".global dirtyfrag_ko_14_6_1_start\n"
+    ".global dirtyfrag_ko_14_6_1_end\n"
+    "dirtyfrag_ko_14_6_1_start:\n"
+    ".incbin \"dirtyfrag-android14-6.1.ko\"\n"
+    "dirtyfrag_ko_14_6_1_end:\n"
+    ".global dirtyfrag_ko_15_6_6_start\n"
+    ".global dirtyfrag_ko_15_6_6_end\n"
+    "dirtyfrag_ko_15_6_6_start:\n"
+    ".incbin \"dirtyfrag-android15-6.6.ko\"\n"
+    "dirtyfrag_ko_15_6_6_end:\n"
+    ".global dirtyfrag_ko_16_6_12_start\n"
+    ".global dirtyfrag_ko_16_6_12_end\n"
+    "dirtyfrag_ko_16_6_12_start:\n"
+    ".incbin \"dirtyfrag-android16-6.12.ko\"\n"
+    "dirtyfrag_ko_16_6_12_end:\n"
+    ".global dirtyfrag_ko_17_6_18_start\n"
+    ".global dirtyfrag_ko_17_6_18_end\n"
+    "dirtyfrag_ko_17_6_18_start:\n"
+    ".incbin \"dirtyfrag-android17-6.18.ko\"\n"
+    "dirtyfrag_ko_17_6_18_end:\n"
 );
 
 asm(
@@ -631,10 +667,72 @@ asm(
     "splice_helper_end:\n"
     );
 
-extern char dirtyfrag_ko_start[];
-extern char dirtyfrag_ko_end[];
+extern char dirtyfrag_ko_12_5_10_start[];
+extern char dirtyfrag_ko_12_5_10_end[];
+extern char dirtyfrag_ko_13_5_10_start[];
+extern char dirtyfrag_ko_13_5_10_end[];
+extern char dirtyfrag_ko_13_5_15_start[];
+extern char dirtyfrag_ko_13_5_15_end[];
+extern char dirtyfrag_ko_14_5_15_start[];
+extern char dirtyfrag_ko_14_5_15_end[];
+extern char dirtyfrag_ko_14_6_1_start[];
+extern char dirtyfrag_ko_14_6_1_end[];
+extern char dirtyfrag_ko_15_6_6_start[];
+extern char dirtyfrag_ko_15_6_6_end[];
+extern char dirtyfrag_ko_16_6_12_start[];
+extern char dirtyfrag_ko_16_6_12_end[];
+extern char dirtyfrag_ko_17_6_18_start[];
+extern char dirtyfrag_ko_17_6_18_end[];
 extern char splice_helper_start[];
 extern char splice_helper_end[];
+
+struct KoImage {
+    int android_release;
+    int kver_major;
+    int kver_minor;
+    const char *start;
+    const char *end;
+};
+
+static const struct KoImage *select_ko_image(int android_release, int kver_major, int kver_minor) {
+    static const struct KoImage images[] = {
+        {12, 5, 10, dirtyfrag_ko_12_5_10_start, dirtyfrag_ko_12_5_10_end},
+        {13, 5, 10, dirtyfrag_ko_13_5_10_start, dirtyfrag_ko_13_5_10_end},
+        {13, 5, 15, dirtyfrag_ko_13_5_15_start, dirtyfrag_ko_13_5_15_end},
+        {14, 5, 15, dirtyfrag_ko_14_5_15_start, dirtyfrag_ko_14_5_15_end},
+        {14, 6, 1, dirtyfrag_ko_14_6_1_start, dirtyfrag_ko_14_6_1_end},
+        {15, 6, 6, dirtyfrag_ko_15_6_6_start, dirtyfrag_ko_15_6_6_end},
+        {16, 6, 12, dirtyfrag_ko_16_6_12_start, dirtyfrag_ko_16_6_12_end},
+        {17, 6, 18, dirtyfrag_ko_17_6_18_start, dirtyfrag_ko_17_6_18_end},
+    };
+    const struct KoImage *fallback = NULL;
+    size_t i;
+    for (i = 0; i < sizeof(images) / sizeof(images[0]); i++) {
+        if (images[i].kver_major != kver_major || images[i].kver_minor != kver_minor)
+            continue;
+        if (images[i].android_release == android_release)
+            return &images[i];
+        if (fallback == NULL)
+            fallback = &images[i];
+    }
+    return fallback;
+}
+
+static int read_device_versions(int *android_release, int *kver_major, int *kver_minor) {
+    struct utsname u;
+    const char *marker;
+    if (uname(&u) != 0)
+        return -1;
+    if (sscanf(u.release, "%d.%d", kver_major, kver_minor) != 2)
+        return -1;
+    marker = strstr(u.release, "android");
+    if (marker == NULL)
+        return -1;
+    *android_release = atoi(marker + 7);
+    if (*android_release <= 0)
+        return -1;
+    return 0;
+}
 
 int patch_ko(struct Reporter *reporter) {
     //char buf[] = {1,2,3,4};
@@ -652,11 +750,27 @@ int patch_ko(struct Reporter *reporter) {
         return ret;
     }
 
-    len = dirtyfrag_ko_end - dirtyfrag_ko_start;
+    int android_release = 0;
+    int kver_major = 0;
+    int kver_minor = 0;
+    if (read_device_versions(&android_release, &kver_major, &kver_minor) != 0) {
+        REPORTLN("unsupported device: version check failed");
+        LOGE("version check failed");
+        return 1;
+    }
+    const struct KoImage *ko = select_ko_image(android_release, kver_major, kver_minor);
+    if (ko == NULL) {
+        REPORTLN("unsupported kernel %d.%d android %d", kver_major, kver_minor, android_release);
+        LOGE("unsupported kernel %d.%d android %d", kver_major, kver_minor, android_release);
+        return 1;
+    }
+    REPORTLN("* ko android%d-%d.%d (%d bytes)", ko->android_release, ko->kver_major, ko->kver_minor, (int)(ko->end - ko->start));
+
+    len = ko->end - ko->start;
 
     LOGD("patching vendorfile");
     REPORTLN("* patching #2");
-    ret = patch_file("[vendorfile]", dirtyfrag_ko_start , len, 0, 0xdead0000, 1, reporter);
+    ret = patch_file("[vendorfile]", (char *)ko->start, len, 0, 0xdead0000, 1, reporter);
         // patch_file("", buf, sizeof(buf), 0, 0xdead0000, 1);
 
     LOGD("patch2 ret %d", ret);
