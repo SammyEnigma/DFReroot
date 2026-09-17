@@ -9,9 +9,18 @@
         android:id="@+id/dialogStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:gravity="center"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:text="@string/run_running" />
+
+    <ProgressBar
+        android:id="@+id/dialogSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        style="?android:attr/progressBarStyleSmall" />
 
     <ScrollView
         android:id="@+id/dialogScroll"

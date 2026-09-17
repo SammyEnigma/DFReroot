@@ -2,7 +2,10 @@
 <resources>
     <string name="app_name">DFInstaller</string>
     <string name="status_idle">Idle. Obtain temporary root first (e.g. ghostlock) and grant root access on the root manager.</string>
-    <string name="steps">Steps: Recheck → Inject → Soft reboot → Install DFReroot (Uninstall removes the key)</string>
+    <string name="step_check">1 Check</string>
+    <string name="step_inject">2 Inject</string>
+    <string name="step_reboot">3 Reboot</string>
+    <string name="step_install">4 Install</string>
     <string name="check_root">Recheck root / key status</string>
     <string name="dump">Dump (read-only, harmless)</string>
     <string name="dry_run">Dry-run (verify without writing)</string>

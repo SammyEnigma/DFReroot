@@ -8,4 +8,6 @@
     <string name="run_running">⏳ Running…</string>
     <string name="run_success">✅ Succeeded</string>
     <string name="run_failed">❌ Failed</string>
+    <string name="chip_ready">READY</string>
+    <string name="chip_hooked">HOOKED</string>
 </resources>

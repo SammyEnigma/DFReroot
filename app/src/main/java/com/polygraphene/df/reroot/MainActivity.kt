@@ -15,13 +15,18 @@ import android.os.Process
 import android.os.SystemClock
 import java.util.concurrent.atomic.AtomicBoolean
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 
 class MainActivity : Activity() {
 
     private lateinit var status: TextView
+    private lateinit var statusChip: TextView
+    private lateinit var btnRunAll: Button
+    private lateinit var progress: ProgressBar
     private lateinit var log: TextView
     @Volatile private var controller: IBinder? = null
     private val controllerLock = Object()
@@ -31,16 +36,21 @@ class MainActivity : Activity() {
     private var runDialogLog: TextView? = null
     private var runDialogScroll: ScrollView? = null
     private var runDialogStatus: TextView? = null
+    private var runDialogSpinner: ProgressBar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         status = findViewById(R.id.status)
+        statusChip = findViewById(R.id.statusChip)
+        btnRunAll = findViewById(R.id.btnRunAll)
+        progress = findViewById(R.id.progress)
         log = findViewById(R.id.log)
 
         status.text = myIdentity()
+        updateChip()
 
-        findViewById<Button>(R.id.btnRunAll).setOnClickListener { runDfAll() }
+        btnRunAll.setOnClickListener { runDfAll() }
         evilReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 try {
@@ -77,11 +87,24 @@ class MainActivity : Activity() {
         showRunDialog()
     }
 
+    private fun updateChip() {
+        if (java.io.File("/dev/df").exists()) {
+            statusChip.text = getString(R.string.chip_hooked)
+            statusChip.setBackgroundResource(R.drawable.chip_warn)
+        } else {
+            statusChip.text = getString(R.string.chip_ready)
+            statusChip.setBackgroundResource(R.drawable.chip_ok)
+        }
+    }
+
     private fun showRunDialog() {
+        btnRunAll.isEnabled = false
+        progress.visibility = View.VISIBLE
         val view = layoutInflater.inflate(R.layout.dialog_run, null)
         runDialogStatus = view.findViewById(R.id.dialogStatus)
         runDialogLog = view.findViewById(R.id.dialogLog)
         runDialogScroll = view.findViewById(R.id.dialogScroll)
+        runDialogSpinner = view.findViewById(R.id.dialogSpinner)
         setRunResult(active = true, success = false)
         val dlg = AlertDialog.Builder(this)
             .setTitle(R.string.run_dialog_title)
@@ -92,6 +115,7 @@ class MainActivity : Activity() {
             runDialogLog = null
             runDialogScroll = null
             runDialogStatus = null
+            runDialogSpinner = null
         }
         dlg.show()
         runBg {
@@ -132,13 +156,19 @@ class MainActivity : Activity() {
             } finally {
                 running.set(false)
                 val success = runResult == 0
-                runOnUiThread { setRunResult(active = false, success = success) }
+                runOnUiThread {
+                    setRunResult(active = false, success = success)
+                    btnRunAll.isEnabled = true
+                    progress.visibility = View.GONE
+                    updateChip()
+                }
             }
         }
     }
 
     private fun setRunResult(active: Boolean, success: Boolean) {
         val st = runDialogStatus ?: return
+        runDialogSpinner?.visibility = if (active) View.VISIBLE else View.GONE
         when {
             active -> {
                 st.text = getString(R.string.run_running)

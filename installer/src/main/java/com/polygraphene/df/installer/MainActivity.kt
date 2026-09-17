@@ -3,18 +3,29 @@ package com.polygraphene.df.installer
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Process
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : Activity() {
 
     private lateinit var status: TextView
     private lateinit var rootState: TextView
     private lateinit var keyState: TextView
+    private lateinit var rootDot: TextView
+    private lateinit var keyDot: TextView
+    private lateinit var stepCheck: TextView
+    private lateinit var stepInject: TextView
+    private lateinit var stepReboot: TextView
+    private lateinit var stepInstall: TextView
+    private lateinit var progress: ProgressBar
     private lateinit var log: TextView
     private lateinit var btnInject: Button
     private lateinit var btnUninstall: Button
@@ -24,10 +35,12 @@ class MainActivity : Activity() {
 
     @Volatile private var rooted = false
     @Volatile private var injected = false
+    private val busyCount = AtomicInteger(0)
 
     private var dialogLog: TextView? = null
     private var dialogScroll: ScrollView? = null
     private var dialogStatus: TextView? = null
+    private var dialogSpinner: ProgressBar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +48,13 @@ class MainActivity : Activity() {
         status = findViewById(R.id.status)
         rootState = findViewById(R.id.rootState)
         keyState = findViewById(R.id.keyState)
+        rootDot = findViewById(R.id.rootDot)
+        keyDot = findViewById(R.id.keyDot)
+        stepCheck = findViewById(R.id.stepCheck)
+        stepInject = findViewById(R.id.stepInject)
+        stepReboot = findViewById(R.id.stepReboot)
+        stepInstall = findViewById(R.id.stepInstall)
+        progress = findViewById(R.id.progress)
         log = findViewById(R.id.log)
         btnInject = findViewById(R.id.btnInject)
         btnUninstall = findViewById(R.id.btnUninstall)
@@ -98,11 +118,65 @@ class MainActivity : Activity() {
     }
 
     private fun updateButtons() {
-        btnRoot.isEnabled = true
-        btnInject.isEnabled = rooted && !injected
-        btnUninstall.isEnabled = rooted && injected
-        btnReboot.isEnabled = rooted
-        btnInstall.isEnabled = rooted
+        val idle = busyCount.get() == 0
+        progress.visibility = if (idle) View.GONE else View.VISIBLE
+        btnRoot.isEnabled = idle
+        btnInject.isEnabled = idle && rooted && !injected
+        btnUninstall.isEnabled = idle && rooted && injected
+        btnReboot.isEnabled = idle && rooted
+        btnInstall.isEnabled = idle && rooted
+        paintStates()
+        paintStepper()
+    }
+
+    private fun paintStates() {
+        val ok = getColor(R.color.accent)
+        val bad = getColor(R.color.red)
+        val neutral = getColor(R.color.textSecondary)
+        val warn = getColor(R.color.amber)
+        if (!rooted) {
+            rootDot.setTextColor(bad)
+            rootState.setTextColor(bad)
+            keyDot.setTextColor(neutral)
+            keyState.setTextColor(neutral)
+        } else {
+            rootDot.setTextColor(ok)
+            rootState.setTextColor(ok)
+            if (injected) {
+                keyDot.setTextColor(ok)
+                keyState.setTextColor(ok)
+            } else {
+                keyDot.setTextColor(warn)
+                keyState.setTextColor(warn)
+            }
+        }
+    }
+
+    private fun paintStepper() {
+        val done = getColor(R.color.accent)
+        val active = getColor(R.color.amber)
+        val todo = getColor(R.color.textSecondary)
+        if (!rooted) {
+            paintStep(stepCheck, active, true)
+            paintStep(stepInject, todo, false)
+            paintStep(stepReboot, todo, false)
+            paintStep(stepInstall, todo, false)
+        } else if (!injected) {
+            paintStep(stepCheck, done, false)
+            paintStep(stepInject, active, true)
+            paintStep(stepReboot, todo, false)
+            paintStep(stepInstall, todo, false)
+        } else {
+            paintStep(stepCheck, done, false)
+            paintStep(stepInject, done, false)
+            paintStep(stepReboot, active, true)
+            paintStep(stepInstall, todo, false)
+        }
+    }
+
+    private fun paintStep(v: TextView, color: Int, bold: Boolean) {
+        v.setTextColor(color)
+        v.setTypeface(null, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
 
     private fun runAppProcess(mode: String): String {
@@ -197,11 +271,16 @@ class MainActivity : Activity() {
     }
 
     private fun runBg(block: () -> Unit) {
+        busyCount.incrementAndGet()
+        ui { updateButtons() }
         Thread {
             try {
                 block()
             } catch (e: Exception) {
                 append("[x] $e")
+            } finally {
+                busyCount.decrementAndGet()
+                ui { updateButtons() }
             }
         }.start()
     }
@@ -241,6 +320,7 @@ class MainActivity : Activity() {
         dialogStatus = view.findViewById(R.id.dialogStatus)
         dialogLog = view.findViewById(R.id.dialogLog)
         dialogScroll = view.findViewById(R.id.dialogScroll)
+        dialogSpinner = view.findViewById(R.id.dialogSpinner)
         setDialogResult(running = true, success = false)
         val dlg = AlertDialog.Builder(this)
             .setTitle(titleRes)
@@ -251,6 +331,7 @@ class MainActivity : Activity() {
             dialogLog = null
             dialogScroll = null
             dialogStatus = null
+            dialogSpinner = null
         }
         dlg.show()
         runBg {
@@ -280,6 +361,7 @@ class MainActivity : Activity() {
 
     private fun setDialogResult(running: Boolean, success: Boolean) {
         val st = dialogStatus ?: return
+        dialogSpinner?.visibility = if (running) View.VISIBLE else View.GONE
         when {
             running -> {
                 st.text = getString(R.string.inject_running)

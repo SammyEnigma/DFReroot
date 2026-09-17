@@ -4,33 +4,147 @@
     android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/bg"
     android:fitsSystemWindows="true">
 
     <TextView
         android:id="@+id/status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/status_idle" />
+        android:text="@string/status_idle"
+        android:textSize="11sp"
+        android:textColor="@color/textSecondary" />
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/steps" />
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/rootState"
+        <TextView
+            android:id="@+id/stepCheck"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/step_check"
+            android:textSize="12sp"
+            android:textColor="@color/textSecondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="›"
+            android:textColor="@color/outline" />
+
+        <TextView
+            android:id="@+id/stepInject"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/step_inject"
+            android:textSize="12sp"
+            android:textColor="@color/textSecondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="›"
+            android:textColor="@color/outline" />
+
+        <TextView
+            android:id="@+id/stepReboot"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/step_reboot"
+            android:textSize="12sp"
+            android:textColor="@color/textSecondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="›"
+            android:textColor="@color/outline" />
+
+        <TextView
+            android:id="@+id/stepInstall"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/step_install"
+            android:textSize="12sp"
+            android:textColor="@color/textSecondary" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/root_unknown" />
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/keyState"
+        <TextView
+            android:id="@+id/rootDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:text="●"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary" />
+
+        <TextView
+            android:id="@+id/rootState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/root_unknown"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textSecondary" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="@string/key_unknown" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/keyDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:text="●"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary" />
+
+        <TextView
+            android:id="@+id/keyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/key_unknown"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textSecondary" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        style="?android:attr/progressBarStyleSmall"
+        android:indeterminateTint="@color/accent" />
 
     <Button
         android:id="@+id/btnRoot"
@@ -38,6 +152,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:minHeight="56dp"
+        android:background="@drawable/btn_outline"
+        android:textColor="@color/accent"
         android:text="@string/check_root" />
 
     <Button
@@ -60,6 +176,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:minHeight="72dp"
+        android:backgroundTint="@color/accent"
+        android:textColor="@color/accentText"
+        android:textStyle="bold"
         android:text="@string/inject" />
 
     <Button
@@ -68,6 +187,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:minHeight="56dp"
+        android:background="@drawable/btn_outline"
+        android:textColor="@color/accent"
         android:text="@string/reboot" />
 
     <Button
@@ -76,6 +197,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:minHeight="72dp"
+        android:backgroundTint="@color/accent"
+        android:textColor="@color/accentText"
+        android:textStyle="bold"
         android:text="@string/install_dfreroot" />
 
     <Button
@@ -84,19 +208,24 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:minHeight="56dp"
+        android:background="@drawable/btn_outline"
+        android:textColor="@color/accent"
         android:text="@string/uninstall_key" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="10dp"
+        android:background="@drawable/log_box">
         <TextView
             android:id="@+id/log"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:padding="8dp"
             android:typeface="monospace"
-            android:textSize="11sp" />
+            android:textSize="11sp"
+            android:textColor="@color/logText" />
     </ScrollView>
 
 </LinearLayout>
