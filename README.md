@@ -6,7 +6,7 @@ persist a system-UID app, then use Dirty Frag from it for all subsequent roots.
 
 ## Supported devices
 
-Currently it only supports Galaxy S26 OneUI 8.5 (samsung/m1qjpnx/m1q:16/BP4A.251205.006/S942QOPU1AZDE_SJP1AZDE:user/release-keys), because the embedded `ksud` is built for Galaxy S26.
+Tested only on Galaxy S26 OneUI 8.5 (samsung/m1qjpnx/m1q:16/BP4A.251205.006/S942QOPU1AZDE_SJP1AZDE:user/release-keys), but might work on other versions.
 
 ## Background
 
