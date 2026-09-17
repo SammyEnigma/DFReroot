@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : Activity() {
 
-    private lateinit var status: TextView
     private lateinit var rootState: TextView
     private lateinit var keyState: TextView
     private lateinit var rootDot: TextView
@@ -45,7 +44,6 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        status = findViewById(R.id.status)
         rootState = findViewById(R.id.rootState)
         keyState = findViewById(R.id.keyState)
         rootDot = findViewById(R.id.rootDot)
@@ -61,7 +59,6 @@ class MainActivity : Activity() {
         btnReboot = findViewById(R.id.btnReboot)
         btnInstall = findViewById(R.id.btnInstall)
         btnRoot = findViewById(R.id.btnRoot)
-        status.text = myIdentity()
 
         btnRoot.setOnClickListener { runBg { refreshAll() } }
         findViewById<Button>(R.id.btnDump).setOnClickListener {
@@ -258,16 +255,6 @@ class MainActivity : Activity() {
             return "[x] su exec failed: ${t.message}\n" +
                 "    first obtain temporary root (e.g. ghostlock) so su works"
         }
-    }
-
-    private fun myIdentity(): String {
-        val ctx = try {
-            File("/proc/self/attr/current").readText().trim().trim('\u0000')
-        } catch (e: Exception) {
-            "?"
-        }
-        return "pid=${Process.myPid()} uid=${Process.myUid()}\n" +
-            "pkg=$packageName\nctx=$ctx"
     }
 
     private fun runBg(block: () -> Unit) {

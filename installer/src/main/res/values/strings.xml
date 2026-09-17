@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DFInstaller</string>
-    <string name="status_idle">Idle. Obtain temporary root first (e.g. ghostlock) and grant root access on the root manager.</string>
     <string name="step_check">1 Check</string>
     <string name="step_inject">2 Inject</string>
     <string name="step_reboot">3 Reboot</string>
