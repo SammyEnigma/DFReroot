@@ -13,9 +13,13 @@ import org.w3c.dom.Element
  * packages.xml injector core (no Android Context needed).
  *
  * Mirrors TLPE EvilFactory.injectSystemSignatures(): put our own cert key
- * into each target <shared-user> as
- * <pastSigs count="2"><cert ... flags="2"/> x2</pastSigs>.
- * The most-recent past cert is not counted as a rotation candidate, hence x2.
+ * into each target <shared-user> pastSigs with flags="2".
+ * Foreign pastSigs entries (e.g. another tool's key for the same
+ * shared-user) are kept in the same single pastSigs block: PMS honors
+ * only the first pastSigs block and drops the rest on its next rewrite,
+ * so merging is required for coexistence.
+ * Our key is written twice: the most-recent past cert is not counted as
+ * a rotation candidate, hence x2.
  *
  * Format handling:
  *  - READ: ABX (Android 13+ on-device format, magic `ABX\0`) via [Abx],
@@ -209,10 +213,16 @@ object PackagesXml {
                 sigs.setAttribute("count", "1")
                 node.appendChild(sigs)
             }
-            // idempotent: drop previous injector runs
-            for (old in children(sigs, "pastSigs")) sigs.removeChild(old)
             val past = doc.createElement("pastSigs")
-            past.setAttribute("count", "2")
+            var kept = 0
+            for (old in children(sigs, "pastSigs")) {
+                for (c in children(old, "cert")) {
+                    past.appendChild(c)
+                    kept++
+                }
+                sigs.removeChild(old)
+            }
+            if (kept > 0) log.appendLine("[+] keeping $kept foreign cert(s) in $t")
             repeat(2) {
                 val c = doc.createElement("cert")
                 c.setAttribute("index", freshIndex)
@@ -220,6 +230,7 @@ object PackagesXml {
                 c.setAttribute("flags", FLAG_SHARED_USER_ID)
                 past.appendChild(c)
             }
+            past.setAttribute("count", (kept + 2).toString())
             sigs.appendChild(past)
             changed++
         }
@@ -302,23 +313,27 @@ object PackagesXml {
 
     /** Re-parse written bytes and confirm our pastSigs landed intact. */
     fun verifyPatched(patched: ByteArray, targets: List<String>, ourKeyHex: String): String {
-        val doc = parseToDom(patched) // patched is text; exercises the TEXT path too
+        val key = ourKeyHex.lowercase()
+        val doc = parseToDom(patched)
+        val table = resolveKeyTable(doc)
         val log = StringBuilder()
         val users = doc.getElementsByTagName("shared-user")
         for (t in targets) {
             var ok = false
+            var foreign = 0
             for (i in 0 until users.length) {
                 val el = users.item(i) as? Element ?: continue
                 if (el.getAttribute("name") != t) continue
                 val past = child(child(el, "sigs") ?: continue, "pastSigs") ?: continue
                 val certs = children(past, "cert")
-                ok = past.getAttribute("count") == "2" && certs.size == 2 &&
-                    certs.all {
-                        it.getAttribute("key").lowercase() == ourKeyHex &&
-                            it.getAttribute("flags") == FLAG_SHARED_USER_ID
-                    }
+                val ours = certs.count {
+                    effectiveKey(it, table) == key &&
+                        it.getAttribute("flags") == FLAG_SHARED_USER_ID
+                }
+                foreign = certs.size - ours
+                ok = ours >= 2 && past.getAttribute("count") == certs.size.toString()
             }
-            log.appendLine("[verify] $t pastSigs intact: $ok")
+            log.appendLine("[verify] $t pastSigs intact: $ok (foreign certs kept: $foreign)")
             if (!ok) throw RuntimeException("verify FAILED for $t")
         }
         return log.toString()
