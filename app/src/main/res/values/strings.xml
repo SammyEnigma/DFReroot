@@ -13,5 +13,5 @@
     <string name="terminal_title">System Terminal</string>
     <string name="terminal_hint">Enter command</string>
     <string name="terminal_send">Send</string>
-    <string name="terminal_open">Open terminal</string>
+    <string name="terminal_button">Terminal</string>
 </resources>

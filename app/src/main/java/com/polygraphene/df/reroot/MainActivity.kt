@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
@@ -55,7 +54,7 @@ class MainActivity : Activity() {
         updateChip()
 
         btnRunAll.setOnClickListener { runDfAll() }
-        findViewById<ImageButton>(R.id.btnTerminal).setOnClickListener {
+        findViewById<Button>(R.id.btnTerminal).setOnClickListener {
             startActivity(Intent(this, TerminalActivity::class.java))
         }
         evilReceiver = object : BroadcastReceiver() {
