@@ -87,7 +87,7 @@ static int __init dirtyfrag_init(void)
 	*(volatile unsigned char *)sstate = 0;
 
 	pr_info("dirtyfrag: Successfully set selinux permissive.\n");
-    /* Return random error to unload module. */
+	/* Return random error to unload module. */
 	return -E2BIG;
 }
 

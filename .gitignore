@@ -19,7 +19,7 @@ dirtyfrag-lkm/modules.order
 dirtyfrag-lkm/.tmp_versions/
 dirtyfrag-lkm/.*.cmd
 dirtyfrag-lkm/.*.o.cmd
-*.ko
+dirtyfrag-lkm/*.ko
 
 .DS_Store
 Thumbs.db
