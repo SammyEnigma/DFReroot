@@ -7,6 +7,10 @@ android {
     namespace = "com.polygraphene.df.installer"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.polygraphene.df.installer"
         minSdk = 32

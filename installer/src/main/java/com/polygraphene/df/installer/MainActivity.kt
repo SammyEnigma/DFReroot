@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : Activity() {
 
+    private lateinit var appTitle: TextView
     private lateinit var rootState: TextView
     private lateinit var keyState: TextView
     private lateinit var rootDot: TextView
@@ -44,6 +45,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        appTitle = findViewById(R.id.appTitle)
+        appTitle.text = "${getString(R.string.app_name)} ${BuildConfig.VERSION_NAME}"
         rootState = findViewById(R.id.rootState)
         keyState = findViewById(R.id.keyState)
         rootDot = findViewById(R.id.rootDot)

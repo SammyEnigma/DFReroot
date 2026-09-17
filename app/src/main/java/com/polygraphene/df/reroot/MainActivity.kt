@@ -23,6 +23,7 @@ import android.widget.TextView
 
 class MainActivity : Activity() {
 
+    private lateinit var appTitle: TextView
     private lateinit var status: TextView
     private lateinit var statusChip: TextView
     private lateinit var btnRunAll: Button
@@ -41,6 +42,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        appTitle = findViewById(R.id.appTitle)
+        appTitle.text = "${getString(R.string.app_name)} ${BuildConfig.VERSION_NAME}"
         status = findViewById(R.id.status)
         statusChip = findViewById(R.id.statusChip)
         btnRunAll = findViewById(R.id.btnRunAll)

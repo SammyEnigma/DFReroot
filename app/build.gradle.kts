@@ -7,6 +7,10 @@ android {
     namespace = "com.polygraphene.df.reroot"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.polygraphene.df.reroot"
         minSdk = 32
