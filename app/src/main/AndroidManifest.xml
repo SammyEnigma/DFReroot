@@ -16,6 +16,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".TerminalActivity"
+            android:exported="false" />
         <receiver
             android:name=".StageReceiver"
             android:exported="false" />

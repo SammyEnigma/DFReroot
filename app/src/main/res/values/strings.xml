@@ -10,4 +10,8 @@
     <string name="run_failed">❌ Failed</string>
     <string name="chip_ready">READY</string>
     <string name="chip_hooked">HOOKED</string>
+    <string name="terminal_title">System Terminal</string>
+    <string name="terminal_hint">Enter command</string>
+    <string name="terminal_send">Send</string>
+    <string name="terminal_open">Open terminal</string>
 </resources>
