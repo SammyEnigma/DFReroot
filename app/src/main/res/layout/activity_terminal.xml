@@ -29,7 +29,8 @@
             android:padding="8dp"
             android:typeface="monospace"
             android:textSize="12sp"
-            android:textColor="@color/logText" />
+            android:textColor="@color/logText"
+            android:textIsSelectable="true" />
     </ScrollView>
 
     <LinearLayout
