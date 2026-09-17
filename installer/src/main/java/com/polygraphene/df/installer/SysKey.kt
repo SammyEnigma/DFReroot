@@ -2,6 +2,7 @@ package com.polygraphene.df.installer
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Looper
 
 /**
  * Signing-key lookup for app_process-as-root ([InjectMain]), where there is
@@ -22,6 +23,7 @@ import android.content.pm.PackageManager
 object SysKey {
     /** Framework System Context for this app_process. */
     fun systemContext(): Context {
+        Looper.prepare()
         val at = Class.forName("android.app.ActivityThread")
         try {
             val current = at.getMethod("currentApplication").invoke(null) as? Context
