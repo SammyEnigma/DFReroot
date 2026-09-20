@@ -15,8 +15,8 @@ android {
         applicationId = "com.polygraphene.df.reroot"
         minSdk = 32
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0.0"
+        versionCode = 4
+        versionName = "2.0.1"
 
         // DirtyFrag native payload (stage1.S) is AArch64-only; the rest of the
         // chain (system_server hosting, network_stack hop) is arch-independent
