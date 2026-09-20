@@ -3,6 +3,8 @@
 set -eu
 cd "$(dirname "$0")"
 
+./build-splice.sh
+
 ./gradlew :app:assembleRelease
 cp app/build/outputs/apk/release/app-release.apk ./df_reroot.apk
 ls -l ./df_reroot.apk

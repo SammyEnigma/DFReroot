@@ -76,6 +76,8 @@ static void reportfmt(struct Reporter *reporter, const char *fmt, ...) {
 
 static const char kCrashDump[] = "/apex/com.android.runtime/bin/crash_dump64";
 
+static const char *target_lib_path = "/vendor/lib64/libstagefrighthw.so";
+
 #define ENC_PORT         4500
 #define SEQ_VAL          200
 #define REPLAY_SEQ       100
@@ -331,7 +333,7 @@ static int do_one_write(int file_fd, off_t offset, uint32_t spi, int use_helper)
                 PLOGE("setfd");
                 _exit(1);
             }
-            execl(kCrashDump, "crashdump64", buf2, NULL);
+            execl(kCrashDump, "crashdump64", buf2, target_lib_path, NULL);
             _exit(1);
         } else {
             //LOGD("pid: %d", pid);

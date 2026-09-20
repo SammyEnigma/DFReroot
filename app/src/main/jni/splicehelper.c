@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-// aarch64-linux-android30-clang splicehelper.c -o splicehelper -nodefaultlibs -nostartfiles -ffreestanding -static
+// "$ANDROID_NDK"/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang splicehelper.c -o splicehelper -nodefaultlibs -nostartfiles -ffreestanding -static && "$ANDROID_NDK"/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip splicehelper
 
 #define OUT_FD 0
 // the pipe fd used to splice
@@ -57,9 +57,10 @@ static unsigned long parse_int(char *s) {
 
 void start_c(void* argblock) {
     off64_t off = parse_int(*(((char**) argblock)+2));
+    char *target = *(((char**) argblock)+3);
     int file_fd = mysyscall3(
         (unsigned long) AT_FDCWD,
-        (unsigned long) "/vendor/lib64/libstagefright_aidl_bufferpool2.so",
+        (unsigned long) target,
         (unsigned long) O_RDONLY,
         __NR_openat
     );
