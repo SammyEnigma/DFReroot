@@ -4,6 +4,9 @@ Persistent root via the Dirty Frag on Android.
 A stable second-stage root: get temporary root once with another exploit (e.g. ghostlock),
 persist a system-UID app, then use Dirty Frag from it for all subsequent roots.
 
+# Announcement
+[https://github.com/diabl0w/DFRoot](https://github.com/diabl0w/DFRoot) by @diabl0w is simpler and better solution. I recommend to use it.
+
 ## Supported devices
 
 Tested only on Galaxy S26 OneUI 8.5 (samsung/m1qjpnx/m1q:16/BP4A.251205.006/S942QOPU1AZDE_SJP1AZDE:user/release-keys), but might work on other versions.
