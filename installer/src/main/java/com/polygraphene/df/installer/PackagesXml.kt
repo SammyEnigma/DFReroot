@@ -405,6 +405,19 @@ object PackagesXml {
      * restorecon. Shared by inject and uninstall backends.
      */
     private fun writeBack(xmlPath: String, patched: ByteArray, log: StringBuilder) {
+        // Original mode/owner for the final file (typically 0600 system:system).
+        var wantMode = 384 // 0600
+        var wantUid = 1000
+        var wantGid = 1000
+        try {
+            val st = android.system.Os.stat(xmlPath)
+            wantMode = st.st_mode and 0x1FF
+            wantUid = st.st_uid
+            wantGid = st.st_gid
+            log.appendLine("[*] original perms ${Integer.toOctalString(wantMode)} $wantUid:$wantGid")
+        } catch (e: Exception) {
+            log.appendLine("[!] stat original: $e (using 0600 system:system)")
+        }
         val bak = java.io.File(xmlPath + BACKUP_SUFFIX)
         if (!bak.exists()) {
             java.io.File(xmlPath).copyTo(bak, overwrite = false)
@@ -412,18 +425,7 @@ object PackagesXml {
         } else {
             log.appendLine("[*] backup already exists, keeping ${bak.absolutePath}")
         }
-        // Original mode/owner for the final file (typically 0600 system:system).
-        var wantMode = 384 // 0600
-        var wantUid = 1000
-        var wantGid = 1000
-        try {
-            val st = android.system.Os.stat(xmlPath + BACKUP_SUFFIX)
-            wantMode = st.st_mode and 0x1FF
-            wantUid = st.st_uid
-            wantGid = st.st_gid
-        } catch (e: Exception) {
-            log.appendLine("[!] stat backup: $e (using 0600 system:system)")
-        }
+        applyPerms(bak.absolutePath, wantMode, wantUid, wantGid, log)
         // Write strategy: direct overwrite first (works where the inode
         // allows it), then rename swap. NOTE: no setenforce games — EPERM was
         // observed even with SELinux fully Permissive, so this is not a MAC
@@ -461,6 +463,7 @@ object PackagesXml {
             applyPerms(xmlPath, wantMode, wantUid, wantGid, log)
             execOk("restorecon", xmlPath)
             log.appendLine("[+] wrote ${patched.size} bytes (TEXT xml; PMS re-reads either format)")
+            verifyPerms(xmlPath, wantMode, wantUid, wantGid, log)
         }
     }
 
@@ -470,6 +473,21 @@ object PackagesXml {
             android.system.Os.chown(path, uid, gid)
         } catch (e: Exception) {
             log.appendLine("[!] chmod/chown $path: $e")
+        }
+    }
+
+    private fun verifyPerms(path: String, wantMode: Int, wantUid: Int, wantGid: Int, log: StringBuilder) {
+        val st = try {
+            android.system.Os.stat(path)
+        } catch (e: Exception) {
+            throw RuntimeException("stat $path failed: $e")
+        }
+        val mode = st.st_mode and 0x1FF
+        log.appendLine("[verify] perms ${Integer.toOctalString(mode)} ${st.st_uid}:${st.st_gid}")
+        if (mode != wantMode || st.st_uid != wantUid || st.st_gid != wantGid) {
+            throw RuntimeException(
+                "perm mismatch on $path: want ${Integer.toOctalString(wantMode)} $wantUid:$wantGid"
+            )
         }
     }
 
