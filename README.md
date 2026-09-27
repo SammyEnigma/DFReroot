@@ -47,6 +47,13 @@ temp root (ghostlock) -> DFInstaller injects key -> soft reboot
 
 `df_reroot.apk` is bundled in `df_installer.apk`. No need to download/install it manually.
 
+## D2 Error fix
+
+Galaxy firmwares around Apr 2026 introduce Odin lockdown feature. On lock screen enabled devices, Odin mode can't be accessed anymore.
+DFReroot v2.1.0 and later has counterpart for this lockdown by writing flags on every boot.
+Tested only on Galaxy S26 (Qualcomm chip). Exynos devices or other devices may have different implementation (Not yet researched).
+For furthur explanation, see [D2_Error](./D2_Error.md).
+
 ## Uninstall
 
 1. Run **Uninstall key** to revert modifications to `packages.xml`.
