@@ -37,6 +37,16 @@
         android:textStyle="bold"
         android:textColor="@color/accentText" />
 
+    <TextView
+        android:id="@+id/dmcState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/dmc_checking"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/textSecondary" />
+
     <Button
         android:id="@+id/btnRunAll"
         android:layout_width="match_parent"

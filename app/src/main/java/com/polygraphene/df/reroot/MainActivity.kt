@@ -24,6 +24,7 @@ import android.widget.TextView
 class MainActivity : Activity() {
 
     private lateinit var appTitle: TextView
+    private lateinit var dmcState: TextView
     private lateinit var status: TextView
     private lateinit var statusChip: TextView
     private lateinit var btnRunAll: Button
@@ -44,6 +45,7 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
         appTitle = findViewById(R.id.appTitle)
         appTitle.text = "${getString(R.string.app_name)} ${BuildConfig.VERSION_NAME}"
+        dmcState = findViewById(R.id.dmcState)
         status = findViewById(R.id.status)
         statusChip = findViewById(R.id.statusChip)
         btnRunAll = findViewById(R.id.btnRunAll)
@@ -71,6 +73,7 @@ class MainActivity : Activity() {
         }
         registerReceiver(evilReceiver, IntentFilter(StageReceiver.EVIL_ACTION), Context.RECEIVER_EXPORTED)
         runBg { append(copyKsud()) }
+        runBg { refreshDmc() }
     }
 
     override fun onDestroy() {
@@ -167,6 +170,24 @@ class MainActivity : Activity() {
                     btnRunAll.isEnabled = true
                     progress.visibility = View.GONE
                     updateChip()
+                }
+            }
+        }
+    }
+
+    private fun refreshDmc() {
+        val state = DmcVault.read()
+        if (state is DmcResult.Unsupported) append("[DMC] ${state.detail}\n")
+        runOnUiThread {
+            when (state) {
+                is DmcResult.Unsupported -> {
+                    dmcState.text = getString(R.string.dmc_unsupported)
+                    dmcState.setTextColor(getColor(R.color.textSecondary))
+                }
+                is DmcResult.Available -> {
+                    val res = if (state.odinAllowed) R.string.dmc_state_unlocked else R.string.dmc_state_locked
+                    dmcState.text = getString(res, state.lock, state.maint, state.at)
+                    dmcState.setTextColor(getColor(if (state.odinAllowed) R.color.accent else R.color.amber))
                 }
             }
         }

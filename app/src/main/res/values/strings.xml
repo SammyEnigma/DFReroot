@@ -10,6 +10,10 @@
     <string name="run_failed">❌ Failed</string>
     <string name="chip_ready">READY</string>
     <string name="chip_hooked">HOOKED</string>
+    <string name="dmc_checking">D2 Vault: checking…</string>
+    <string name="dmc_unsupported">D2 Vault: Unsupported Device</string>
+    <string name="dmc_state_locked">D2 Vault: lock=%1$d maint=%2$d at=%3$d — Odin locked</string>
+    <string name="dmc_state_unlocked">D2 Vault: lock=%1$d maint=%2$d at=%3$d — Odin allowed</string>
     <string name="terminal_title">System Terminal</string>
     <string name="terminal_hint">Enter command</string>
     <string name="terminal_send">Send</string>

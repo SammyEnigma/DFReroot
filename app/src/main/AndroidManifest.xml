@@ -22,6 +22,15 @@
         <receiver
             android:name=".StageReceiver"
             android:exported="false" />
+        <receiver
+            android:name=".DmcBootReceiver"
+            android:exported="false"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
