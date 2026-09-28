@@ -130,26 +130,6 @@ object PackagesXml {
     }
 
     /**
-     * Returns (keyHex, index) of our own <cert> from our <package> node, or
-     * null. Resolves inline-key and index-only (table-resolved) refs alike —
-     * the latter happens whenever another package with the same key bytes
-     * was serialized earlier (same-signing-key apps dedup to one slot).
-     */
-    fun findInstalledKey(doc: Document, ownPkg: String): Pair<String, String>? {
-        val table = resolveKeyTable(doc)
-        val pkgs = doc.getElementsByTagName("package")
-        for (i in 0 until pkgs.length) {
-            val el = pkgs.item(i) as? Element ?: continue
-            if (el.getAttribute("name") != ownPkg) continue
-            val sigs = child(el, "sigs") ?: return null
-            val cert = child(sigs, "cert") ?: return null
-            val resolved = effectiveKey(cert, table) ?: return null
-            return resolved to cert.getAttribute("index").ifEmpty { "0" }
-        }
-        return null
-    }
-
-    /**
      * Pure transform on an already-parsed DOM: returns patched TEXT XML bytes.
      * [ourKeyHex] must be lowercase hex (enforced).
      */

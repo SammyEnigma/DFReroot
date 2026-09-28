@@ -244,8 +244,4 @@ class MainActivity : Activity() {
             runDialogScroll?.post { runDialogScroll?.fullScroll(ScrollView.FOCUS_DOWN) }
         }
     }
-
-    companion object {
-        const val TAG = "DFReroot"
-    }
 }

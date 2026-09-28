@@ -4,8 +4,6 @@ import android.content.Context
 import java.io.File
 
 object KsudStage {
-    const val TAG = "SysPersist"
-
     const val DEST = "/data/system/dfreroot-ksud"
 
     fun stageFromAssets(context: Context): String {

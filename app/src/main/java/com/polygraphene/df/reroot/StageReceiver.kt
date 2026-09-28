@@ -48,26 +48,6 @@ class StageReceiver : BroadcastReceiver() {
             ): Boolean {
                 try {
                     when (code) {
-                        1 -> {
-                            Log.d(TAG, "executing patchMod")
-                            reply?.writeInt(DirtyFrag.patchMod())
-                            return true
-                        }
-                        2 -> {
-                            Log.d(TAG, "executing patchLibc")
-                            reply?.writeInt(DirtyFrag.patchLibc())
-                            return true
-                        }
-                        3 -> {
-                            Log.d(TAG, "executing patchCxx")
-                            reply?.writeInt(DirtyFrag.patchCxx())
-                            return true
-                        }
-                        4 -> {
-                            Log.d(TAG, "executing orphan")
-                            reply?.writeInt(DirtyFrag.createOrphanProcess())
-                            return true
-                        }
                         5 -> {
                             Log.d(TAG, "run all")
                             val df = DirtyFrag(data.readStrongBinder())

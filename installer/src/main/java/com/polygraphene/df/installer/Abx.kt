@@ -61,26 +61,6 @@ object Abx {
         }
     }
 
-    /** Typed probe for diagnostics (dump mode). Null = not applicable/failed. */
-    fun probeInt(p: XmlPullParser, index: Int): Int? {
-        return try {
-            p.javaClass.getMethod("getAttributeInt", Int::class.javaPrimitiveType)
-                .invoke(p, index) as Int
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    /** Typed probe for diagnostics (dump mode). Null = not bytes/failed. */
-    fun probeBytesHex(p: XmlPullParser, index: Int): ByteArray? {
-        return try {
-            p.javaClass.getMethod("getAttributeBytesHex", Int::class.javaPrimitiveType)
-                .invoke(p, index) as ByteArray?
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     /**
      * Pull-parse (ABX or text via [resolvePullParser]) into a DOM Document.
      * Throws on: unknown tokens, non-whitespace text, unbalanced tags,
