@@ -59,6 +59,17 @@
         android:textColor="@color/textPrimary"
         android:buttonTint="@color/accent" />
 
+    <CheckBox
+        android:id="@+id/autorootCheck"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:minHeight="48dp"
+        android:text="@string/autoroot_enable"
+        android:textSize="14sp"
+        android:textColor="@color/textPrimary"
+        android:buttonTint="@color/accent" />
+
     <Button
         android:id="@+id/btnRunAll"
         android:layout_width="match_parent"

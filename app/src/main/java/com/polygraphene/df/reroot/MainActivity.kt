@@ -2,19 +2,10 @@ package com.polygraphene.df.reroot
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
-import android.os.Binder
 import android.os.Bundle
-import android.os.IBinder
-import android.os.Parcel
 import android.os.Process
-import android.os.SystemClock
-import java.util.concurrent.atomic.AtomicBoolean
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
@@ -32,10 +23,7 @@ class MainActivity : Activity() {
     private lateinit var btnRunAll: Button
     private lateinit var progress: ProgressBar
     private lateinit var log: TextView
-    @Volatile private var controller: IBinder? = null
-    private val controllerLock = Object()
-    private val running = AtomicBoolean(false)
-    private var evilReceiver: BroadcastReceiver? = null
+    private lateinit var autorootCheck: CheckBox
 
     private var runDialogLog: TextView? = null
     private var runDialogScroll: ScrollView? = null
@@ -75,6 +63,24 @@ class MainActivity : Activity() {
             val on = DfrerootConfig.isD2Enabled()
             runOnUiThread { d2Check.isChecked = on }
         }
+        autorootCheck = findViewById(R.id.autorootCheck)
+        autorootCheck.setOnClickListener {
+            val checked = autorootCheck.isChecked
+            runBg {
+                val ok = DfrerootConfig.setAutoRootEnabled(checked)
+                if (ok && checked) AutoRoot.clearFlag()
+                val actual = DfrerootConfig.isAutoRootEnabled()
+                runOnUiThread {
+                    autorootCheck.isChecked = actual
+                    if (ok) append("[AutoRoot] auto root ${if (actual) "enabled" else "disabled"}\n")
+                    else append("[AutoRoot] failed to save setting\n")
+                }
+            }
+        }
+        runBg {
+            val on = DfrerootConfig.isAutoRootEnabled()
+            runOnUiThread { autorootCheck.isChecked = on }
+        }
         status = findViewById(R.id.status)
         statusChip = findViewById(R.id.statusChip)
         btnRunAll = findViewById(R.id.btnRunAll)
@@ -88,28 +94,8 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.btnTerminal).setOnClickListener {
             startActivity(Intent(this, TerminalActivity::class.java))
         }
-        evilReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                try {
-                    controller = intent.extras?.getBinder("CONTROLLER")
-                    append("networkstack CONTROLLER binder received\n")
-                } catch (t: Throwable) {
-                    append("[x] resolve binder: $t\n")
-                } finally {
-                    synchronized(controllerLock) { controllerLock.notifyAll() }
-                }
-            }
-        }
-        registerReceiver(evilReceiver, IntentFilter(StageReceiver.EVIL_ACTION), Context.RECEIVER_EXPORTED)
         runBg { append(copyKsud()) }
         runBg { refreshDmc() }
-    }
-
-    override fun onDestroy() {
-        evilReceiver?.let {
-            try { unregisterReceiver(it) } catch (_: Exception) { }
-        }
-        super.onDestroy()
     }
 
     private fun runDfAll() {
@@ -118,7 +104,7 @@ class MainActivity : Activity() {
                 "    Only hard reboot clears armed hooks.\n")
             return
         }
-        if (!running.compareAndSet(false, true)) {
+        if (!AutoRoot.rootRunning.compareAndSet(false, true)) {
             append("already running\n")
             return
         }
@@ -157,49 +143,16 @@ class MainActivity : Activity() {
         }
         dlg.show()
         runBg {
-            var runResult = -1
             try {
-                append(StageHop.hopToNetworkStack(this))
-                val c = awaitController(timeoutMs = 30_000) ?: run {
-                    append("[x] no CONTROLLER within 30s " +
-                        "(hop failed or network_stack too slow; see logcat)\n")
-                    return@runBg
-                }
-                val p = Parcel.obtain()
-                val r = Parcel.obtain()
-                val reporter = object : Binder() {
-                    override fun onTransact(
-                        code: Int, data: Parcel, reply: Parcel?, flags: Int
-                    ): Boolean {
-                        try {
-                            append(data.readString() ?: "")
-                        } catch (t: Throwable) {
-                            Log.e(TAG, "reporter recv failed", t)
-                        }
-                        return true
-                    }
-                }
-                p.writeStrongBinder(reporter)
-                try {
-                    if (c.transact(5, p, r, 0)) {
-                        runResult = r.readInt()
-                        append("\nrunAll done res=$runResult\n")
-                    } else append("runAll failed: transact returned false\n")
-                } catch (t: Throwable) {
-                    append("runAll failed: ${t.message}\n")
-                } finally {
-                    p.recycle()
-                    r.recycle()
-                }
-            } finally {
-                running.set(false)
-                val success = runResult == 0
+                val runResult = AutoRoot.runRoot(this, ::append, 30_000)
                 runOnUiThread {
-                    setRunResult(active = false, success = success)
+                    setRunResult(active = false, success = runResult == 0)
                     btnRunAll.isEnabled = true
                     progress.visibility = View.GONE
                     updateChip()
                 }
+            } finally {
+                AutoRoot.rootRunning.set(false)
             }
         }
     }
@@ -239,26 +192,6 @@ class MainActivity : Activity() {
                 st.text = getString(R.string.run_failed)
                 st.setTextColor(Color.parseColor("#C62828"))
             }
-        }
-    }
-
-    private fun awaitController(timeoutMs: Long): IBinder? {
-        val deadline = SystemClock.uptimeMillis() + timeoutMs
-        synchronized(controllerLock) {
-            var c = controller
-            while (c == null) {
-                val left = deadline - SystemClock.uptimeMillis()
-                if (left <= 0) break
-                append("[*] waiting for CONTROLLER... (${left / 1000}s left)\n")
-                try {
-                    controllerLock.wait(minOf(left, 5_000))
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    break
-                }
-                c = controller
-            }
-            return c
         }
     }
 

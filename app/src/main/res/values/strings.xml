@@ -9,6 +9,7 @@
     <string name="run_success">✅ Succeeded</string>
     <string name="run_failed">❌ Failed</string>
     <string name="d2fix_enable">Fix D2 Error (Odin unlock)</string>
+    <string name="autoroot_enable">Auto root on boot</string>
     <string name="chip_ready">READY</string>
     <string name="chip_hooked">HOOKED</string>
     <string name="dmc_checking">D2 Vault: checking…</string>

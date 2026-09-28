@@ -81,17 +81,33 @@ class StageReceiver : BroadcastReceiver() {
             }
         }
 
-        val i = Intent().apply {
-            setPackage(StageHop.PKG)
-            action = EVIL_ACTION
-            putExtras(Bundle().apply { putBinder("CONTROLLER", controller) })
-        }
-        context.sendBroadcast(i)
-        Log.i(TAG, "controller sent")
+        heldController = controller
+        sendController(context, controller)
+        Log.i(TAG, "controller send started")
+    }
+
+    private fun sendController(context: Context, controller: Binder) {
+        Thread {
+            repeat(5) { attempt ->
+                try {
+                    val i = Intent().apply {
+                        setClassName(StageHop.PKG, "com.polygraphene.df.reroot.EvilReceiver")
+                        action = EVIL_ACTION
+                        putExtras(Bundle().apply { putBinder("CONTROLLER", controller) })
+                    }
+                    context.sendBroadcast(i)
+                    Log.i(TAG, "controller sent ($attempt)")
+                } catch (t: Throwable) {
+                    Log.e(TAG, "controller send failed ($attempt)", t)
+                }
+                Thread.sleep(2000)
+            }
+        }.start()
     }
 
     companion object {
         const val TAG = "DFReroot"
         const val EVIL_ACTION = "com.polygraphene.df.reroot.EVIL"
+        @Volatile private var heldController: Binder? = null
     }
 }
