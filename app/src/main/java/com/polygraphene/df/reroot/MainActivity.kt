@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
@@ -25,6 +26,7 @@ class MainActivity : Activity() {
 
     private lateinit var appTitle: TextView
     private lateinit var dmcState: TextView
+    private lateinit var d2Check: CheckBox
     private lateinit var status: TextView
     private lateinit var statusChip: TextView
     private lateinit var btnRunAll: Button
@@ -46,6 +48,33 @@ class MainActivity : Activity() {
         appTitle = findViewById(R.id.appTitle)
         appTitle.text = "${getString(R.string.app_name)} ${BuildConfig.VERSION_NAME}"
         dmcState = findViewById(R.id.dmcState)
+        d2Check = findViewById(R.id.d2Check)
+        d2Check.setOnClickListener {
+            val checked = d2Check.isChecked
+            runBg {
+                val ok = DfrerootConfig.setD2Enabled(checked)
+                val actual = DfrerootConfig.isD2Enabled()
+                if (ok && actual) {
+                    val w = DmcVault.writeAtFlag()
+                    val msg = when (w) {
+                        is DmcWriteResult.Done -> if (w.wrote) "[D2] AT flag set" else "[D2] AT flag already set"
+                        is DmcWriteResult.Skipped -> "[D2] AT flag skipped: ${w.reason}"
+                        is DmcWriteResult.Failed -> "[D2] AT flag write failed: ${w.reason}"
+                    }
+                    append("$msg\n")
+                    refreshDmc()
+                }
+                runOnUiThread {
+                    d2Check.isChecked = actual
+                    if (ok) append("[D2] D2 fix ${if (actual) "enabled" else "disabled"}\n")
+                    else append("[D2] failed to save setting\n")
+                }
+            }
+        }
+        runBg {
+            val on = DfrerootConfig.isD2Enabled()
+            runOnUiThread { d2Check.isChecked = on }
+        }
         status = findViewById(R.id.status)
         statusChip = findViewById(R.id.statusChip)
         btnRunAll = findViewById(R.id.btnRunAll)
@@ -179,6 +208,7 @@ class MainActivity : Activity() {
         val state = DmcVault.read()
         if (state is DmcResult.Unsupported) append("[DMC] ${state.detail}\n")
         runOnUiThread {
+            d2Check.visibility = if (state is DmcResult.Available) View.VISIBLE else View.GONE
             when (state) {
                 is DmcResult.Unsupported -> {
                     dmcState.text = getString(R.string.dmc_unsupported)
