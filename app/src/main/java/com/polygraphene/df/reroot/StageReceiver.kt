@@ -1,13 +1,16 @@
 package com.polygraphene.df.reroot
 
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Binder
-import android.os.Bundle
+import android.os.IBinder
 import android.os.Parcel
 import android.os.RemoteException
 import android.util.Log
+import java.util.concurrent.atomic.AtomicBoolean
 import org.lsposed.lspromise.DirtyFrag
 
 /**
@@ -82,32 +85,65 @@ class StageReceiver : BroadcastReceiver() {
         }
 
         heldController = controller
-        sendController(context, controller)
+        sendController(context.applicationContext, controller)
         Log.i(TAG, "controller send started")
     }
 
     private fun sendController(context: Context, controller: Binder) {
         Thread {
             repeat(5) { attempt ->
+                val delivered = AtomicBoolean(false)
+                val conn = object : ServiceConnection {
+                    override fun onServiceConnected(name: ComponentName, service: IBinder) {
+                        val data = Parcel.obtain()
+                        val reply = Parcel.obtain()
+                        try {
+                            data.writeStrongBinder(controller)
+                            if (service.transact(1, data, reply, 0)) delivered.set(true)
+                        } catch (t: Throwable) {
+                            Log.e(TAG, "controller push failed ($attempt)", t)
+                        } finally {
+                            data.recycle()
+                            reply.recycle()
+                            try {
+                                context.unbindService(this)
+                            } catch (_: Exception) {
+                            }
+                        }
+                    }
+
+                    override fun onServiceDisconnected(name: ComponentName) {
+                    }
+                }
                 try {
                     val i = Intent().apply {
-                        setClassName(StageHop.PKG, "com.polygraphene.df.reroot.EvilReceiver")
-                        action = EVIL_ACTION
-                        putExtras(Bundle().apply { putBinder("CONTROLLER", controller) })
+                        setClassName(StageHop.PKG, "com.polygraphene.df.reroot.ControllerService")
                     }
-                    context.sendBroadcast(i)
-                    Log.i(TAG, "controller sent ($attempt)")
+                    if (context.bindService(i, conn, Context.BIND_AUTO_CREATE)) {
+                        repeat(10) {
+                            if (delivered.get()) return@Thread
+                            Thread.sleep(500)
+                        }
+                    }
+                    try {
+                        context.unbindService(conn)
+                    } catch (_: Exception) {
+                    }
                 } catch (t: Throwable) {
-                    Log.e(TAG, "controller send failed ($attempt)", t)
+                    Log.e(TAG, "controller bind failed ($attempt)", t)
+                }
+                if (delivered.get()) {
+                    Log.i(TAG, "controller pushed ($attempt)")
+                    return@Thread
                 }
                 Thread.sleep(2000)
             }
+            Log.w(TAG, "controller push retries exhausted")
         }.start()
     }
 
     companion object {
         const val TAG = "DFReroot"
-        const val EVIL_ACTION = "com.polygraphene.df.reroot.EVIL"
         @Volatile private var heldController: Binder? = null
     }
 }

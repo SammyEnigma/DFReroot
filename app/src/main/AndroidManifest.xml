@@ -23,8 +23,8 @@
         <receiver
             android:name=".StageReceiver"
             android:exported="false" />
-        <receiver
-            android:name=".EvilReceiver"
+        <service
+            android:name=".ControllerService"
             android:exported="true"
             android:directBootAware="true" />
         <receiver
